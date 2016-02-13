@@ -25,22 +25,25 @@ public class ScpToHDFS
 	{
 		final String hostname = args[0].trim();
 		final String username = args[1].trim();
-		final String passwwordFile = args[2].trim();
+		final String passwordFile = args[2].trim();
 		final String sourceDirectory = args[3].trim();
-		final String destinationDirectory = args[3].trim();
+		final String sourceFileWithPattern = args[4].trim();
+		final String destinationDirectory = args[5].trim();
 
 		final Configuration conf = new Configuration();
 		final FileSystem fs = FileSystem.get(conf);
 
-		final String strPassword = getPassWord(fs, passwwordFile);
+		final String strPassword = getPassWord(fs, passwordFile);
 
-		uploadToHDFS(fs, hostname, username, strPassword, sourceDirectory, destinationDirectory);
+		uploadToHDFS(fs, hostname, username, strPassword, sourceDirectory,
+				  sourceFileWithPattern, destinationDirectory);
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public static void uploadToHDFS(final FileSystem fs, final String hostname, final String username,
-			final String password, final String directoryWithPattern, final String destinationDirectory) throws Exception
+			final String password, final String sourceDirectory, final String sourceFileWithPattern,
+			final String destinationDirectory) throws Exception
 	{
 
 		java.util.Properties config = new java.util.Properties();
@@ -55,9 +58,11 @@ public class ScpToHDFS
 		channel.connect();
 
 		ChannelSftp sftp = (ChannelSftp)channel;
-		Vector<ChannelSftp.LsEntry> files = sftp.ls(directoryWithPattern);
+		sftp.cd(sourceDirectory);
 
-		System.out.printf("Found %d files in dir %s%n", files.size(), directoryWithPattern);
+		Vector<ChannelSftp.LsEntry> files = sftp.ls(sourceFileWithPattern);
+
+		System.out.printf("Found %d files in dir %s%n", files.size(), sourceDirectory);
 
 		for ( ChannelSftp.LsEntry file : files )
 		{
@@ -78,15 +83,11 @@ public class ScpToHDFS
 	}
 
 
-	public static String getPassWord(final FileSystem fs, final String passwwordFile) throws Exception
+	public static String getPassWord(final FileSystem fs, final String passwordFile) throws Exception
 	{
-		final Path path = new Path(passwwordFile);
+		final Path path = new Path(passwordFile);
 		final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fs.open(path)));
 		String line = bufferedReader.readLine();
-		while ( line != null )
-		{
-			line = bufferedReader.readLine();
-		}
 		return line.trim();
 	}
 }
