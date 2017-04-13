@@ -98,4 +98,13 @@ class CustomAssociationRules(rdd: RDD[(Long, Set[String])], sc: SparkContext) {
     }).filter(x => x != null))
 
   }
+  
+  def haversineDistance(geocode1: Geocode, geocode2: Geocode): Double = {
+    val deltaLat = math.toRadians(geocode2.longitude - geocode1.longitude)
+    val deltaLong = math.toRadians(geocode2.latitude - geocode1.latitude)
+    val a = math.pow(math.sin(deltaLat / 2), 2)
+    + math.cos(math.toRadians(geocode1.longitude)) * math.cos(math.toRadians(geocode1.longitude)) * math.pow(math.sin(deltaLong / 2), 2)
+    val greatCircleDistance = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    3958.761 * greatCircleDistance
+  }
 }
